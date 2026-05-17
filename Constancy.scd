@@ -52,6 +52,31 @@ s.waitForBoot({
 	~constancy = (
 		type: \composite,
 		play: { |self| },
+		init: { |self|
+			var home = Platform.userHomeDir;
+			self.save_file = home + "/constancy.yaml";
+		},
+		save_file: nil,
+		load: { |self|
+			if (self.save_file == nil, {
+				self.init();
+			});
+		},
+		save: { |self|
+//			var param_dict = {
+//				'output_dest': s.options.outDevice,
+//				'pan': self.pan,
+//				'amp': self.amp,
+//				'mapper': {
+//					'center_midi': self.mapper.center_midi,
+//					'center_f': self.mapper.center_f,
+//					'npo': self.mapper.npo
+//				}
+//			};
+			if (self.save_file == nil, {
+				self.init();
+			});
+		},
 		mapper: ~mapper.new(~mapper.tet(24)),
 		notes: Array.fill(128, nil),
 		note_on: { |self, vel, note, chan|
@@ -135,10 +160,31 @@ s.waitForBoot({
 			win.front;
 		},
 	);
+	~constancy.init();
 	~constancy.build_gui();
 })
 )
 
+"{44: 'woo'}".parseYAML
+(
+var self = ~constancy;
+self.postln;
+d = (
+	'output_dest': s.options.outDevice,
+	'pan': ~constancy.pan,
+	'amp': ~constancy.amp,
+	'mapper': (
+		'center_midi': ~constancy.mapper.center_midi,
+		'center_f': ~constancy.mapper.center_f,
+		'npo': ~constancy.mapper.npo
+	)
+);
+d.postln;
+)
+a = if (s.options.outDevice != nil, "something", "nothing")
+
+ServerOptions.outDevice
+ServerOptions
 (
 SynthDef(\berlinb, { arg out=0, freq = 80, amp = 0.01, pan=0, gate=1;
     var synth, env;
@@ -153,13 +199,9 @@ SynthDef(\berlinb, { arg out=0, freq = 80, amp = 0.01, pan=0, gate=1;
     Out.ar(out, amp * Mix.ar(PanAz.ar(4, [a, b], [pan, pan+1])));
 }).add;
 )
-ServerOptions.outDevices
-ServerOptions.inDevices
-ServerOptions.devices
-s.options.outDevice_("MME : Speaker/HP (Realtek High Defini")
-s.reboot
-ServerOptions.
 
+
+Synth(\berlinb, [\amp, 0.5])
 (
 ~image = Image(64, 64).draw({
     Pen.fillColor = Color.blue;
